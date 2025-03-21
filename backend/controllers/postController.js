@@ -1,13 +1,13 @@
-const Post = require('../models/Post');
+const Post = require("../models/Post");
 
-const getPosts = async (req, res) => { 
+const getPosts = async (req, res) => {
   try {
     const posts = await Post.find({ userId: req.user.id });
     res.json(posts);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-}
+};
 
 const addPost = async (req, res) => {
   const { location, caption, img } = req.body;
@@ -23,13 +23,13 @@ const addPost = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-}
+};
 
 const updatePost = async (req, res) => {
   const { title, description, completed, deadline } = req.body;
   try {
     const post = await Post.findById(req.params.id);
-    if (!post) return res.status(404).json({ message: 'Post not found' });
+    if (!post) return res.status(404).json({ message: "Post not found" });
     post.location = location || post.location;
     post.caption = caption || post.caption;
     post.img = img || post.img;
@@ -43,9 +43,9 @@ const updatePost = async (req, res) => {
 const deletePost = async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
-    if (!post) return res.status(404).json({ message: 'Post not found' });
+    if (!post) return res.status(404).json({ message: "Post not found" });
     await post.remove();
-    res.json({ message: 'Post deleted' });
+    res.json({ message: "Post deleted" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
