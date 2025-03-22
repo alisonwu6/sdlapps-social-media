@@ -2,7 +2,7 @@ const Post = require("../models/Post");
 
 const getPosts = async (req, res) => {
   try {
-    const posts = await Post.find({ userId: req.user.id });
+    const posts = await Post.find().populate("userId", "username");
     res.json(posts);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -10,14 +10,12 @@ const getPosts = async (req, res) => {
 };
 
 const addPost = async (req, res) => {
-  const { location, caption, img } = req.body;
+  const { location, caption } = req.body;
   try {
     const post = await Post.create({
       userId: req.user.id,
       location,
       caption,
-      img,
-      // createdAt,  // TODO
     });
     res.status(201).json(post);
   } catch (error) {
@@ -26,13 +24,12 @@ const addPost = async (req, res) => {
 };
 
 const updatePost = async (req, res) => {
-  const { title, description, completed, deadline } = req.body;
+  const { location, caption } = req.body;
   try {
     const post = await Post.findById(req.params.id);
     if (!post) return res.status(404).json({ message: "Post not found" });
     post.location = location || post.location;
     post.caption = caption || post.caption;
-    post.img = img || post.img;
     const updatedPost = await post.save();
     res.json(updatedPost);
   } catch (error) {

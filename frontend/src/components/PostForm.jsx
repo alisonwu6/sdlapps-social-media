@@ -7,7 +7,6 @@ const PostForm = ({ posts, setPosts, editingPost, setEditingPost }) => {
   const [formData, setFormData] = useState({
     location: "",
     caption: "",
-    img: "",
     createdAt: "",
   });
 
@@ -16,10 +15,9 @@ const PostForm = ({ posts, setPosts, editingPost, setEditingPost }) => {
       setFormData({
         location: editingPost.location,
         caption: editingPost.caption,
-        img: editingPost.img,
       });
     } else {
-      setFormData({ location: "", caption: "", img: "" });
+      setFormData({ location: "", caption: ""});
     }
   }, [editingPost]);
 
@@ -43,7 +41,6 @@ const PostForm = ({ posts, setPosts, editingPost, setEditingPost }) => {
         const response = await axiosInstance.post("/api/posts", formData, {
           headers: { Authorization: `Bearer ${user.token}` },
         });
-        console.log("response.data", response.data);
         setPosts([...posts, response.data]);
       }
       setEditingPost(null);
