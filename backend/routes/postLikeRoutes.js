@@ -2,7 +2,7 @@ const express = require("express");
 const {
   toggleLike,
   getUserLikedPostId,
-} = require("../controllers/likeController");
+} = require("../controllers/postLikeController");
 const { protect } = require("../middleware/authMiddleware");
 const router = express.Router();
 

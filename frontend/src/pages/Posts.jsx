@@ -25,7 +25,6 @@ const Posts = () => {
     
     const fetchUserLikes = async () => {
       try {
-        console.log("user", user);
         const response = await axiosInstance.get("/api/likes/user-likes", {
           headers: { Authorization: `Bearer ${user.token}` },
         });

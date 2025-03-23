@@ -14,7 +14,6 @@ const LikeButton = ({ postId, userId, hasLiked }) => {
       return;
     }
     try {
-      setIsLiked(!isLiked);
       await axiosInstance.post(
         `api/likes`,
         {
@@ -25,6 +24,7 @@ const LikeButton = ({ postId, userId, hasLiked }) => {
           headers: { Authorization: `Bearer ${user.token}` },
         }
       );
+      setIsLiked(!isLiked);
     } catch (error) {
       alert("Failed to change status of like");
       setIsLiked(isLiked);
