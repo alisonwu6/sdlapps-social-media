@@ -4,9 +4,9 @@ import axiosInstance from "../axiosConfig";
 import { HeartIcon as HeartSolid } from "@heroicons/react/24/solid";
 import { HeartIcon as HeartOutline } from "@heroicons/react/24/outline";
 
-const LikeButton = ({ postId, userId }) => {
+const LikeButton = ({ postId, userId, hasLiked }) => {
   const { user } = useAuth();
-  const [isLiked, setIsLiked] = useState(false);
+  const [isLiked, setIsLiked] = useState(hasLiked);
 
   const toggleLike = async () => {
     if (!user) {

@@ -1,4 +1,3 @@
-const Post = require("../models/Post");
 const PostLike = require("../models/PostLike");
 
 const toggleLike = async (req, res) => {
@@ -21,4 +20,16 @@ const toggleLike = async (req, res) => {
   }
 };
 
-module.exports = { toggleLike };
+const getUserLikedPostId = async (req, res) => {
+  const userId = req.user._id;
+
+  try {
+    const likes = await PostLike.find({ userId }).select("postId -_id");
+    const likedPostIds = likes.map((like) => like.postId.toString());
+    res.status(200).json({ likedPostIds });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+module.exports = { toggleLike, getUserLikedPostId };

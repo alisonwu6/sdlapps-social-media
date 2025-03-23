@@ -7,6 +7,7 @@ const PostList = ({
   caption,
   createdAt,
   userId: { username, avatar, _id: uid },
+  hasLiked
 }) => {
   return (
     <div className="border-2 rounded mb-4">
@@ -27,6 +28,7 @@ const PostList = ({
             <LikeButton
               postId={_id}
               userId={uid}
+              hasLiked={hasLiked}
             />
             <span className="text-sm font-bold">10</span>
           </div>
