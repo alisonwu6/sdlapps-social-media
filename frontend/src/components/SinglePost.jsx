@@ -1,14 +1,30 @@
+import { useState, useEffect } from "react";
+import axiosInstance from "../axiosConfig";
 import LikeButton from "./LikeButton";
 import { ChatBubbleLeftIcon } from "@heroicons/react/24/outline";
 
 const PostList = ({
-  _id,
+  _id: pid,
   location,
   caption,
   createdAt,
   userId: { username, avatar, _id: uid },
-  hasLiked
+  hasLiked,
 }) => {
+  const [likeCount, setLikeCount] = useState(0);
+
+  useEffect(() => {
+    const getLikeCount = async () => {
+      try {
+        const response = await axiosInstance.get(`/api/likes/${pid}/count`);
+        setLikeCount(response.data.count);
+      } catch (error) {
+        console.error("getLikeCount error", error);
+      }
+    };
+    getLikeCount();
+  }, [pid]);
+
   return (
     <div className="border-2 rounded mb-4">
       <div className="flex h-[70px] items-center box-border px-4">
@@ -26,11 +42,11 @@ const PostList = ({
         <div className="px-4">
           <div className="inline-flex">
             <LikeButton
-              postId={_id}
+              postId={pid}
               userId={uid}
               hasLiked={hasLiked}
             />
-            <span className="text-sm font-bold">10</span>
+            <span className="text-sm font-bold">{likeCount}</span>
           </div>
           <div className="inline-flex ml-2">
             <ChatBubbleLeftIcon className="h-6 w-6 text-gray-600" />
