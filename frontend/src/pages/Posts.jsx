@@ -15,7 +15,7 @@ const Posts = () => {
       }
     };
     fetchPosts();
-  });
+  }, []);
 
   return (
     <div className="container mx-auto p-6">

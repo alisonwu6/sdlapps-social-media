@@ -7,18 +7,19 @@ const generateToken = (id) => {
 };
 
 const registerUser = async (req, res) => {
-  const { name, username, email, password } = req.body;
+  const { name, username, email, avatar ,password } = req.body;
   try {
     const userExists = await User.findOne({ email });
     if (userExists)
       return res.status(400).json({ message: "User already exists" });
 
-    const user = await User.create({ name, username, email, password });
+    const user = await User.create({ name, username, email, avatar, password });
     res.status(201).json({
       id: user.id,
       name: user.name,
       username: user.username,
       email: user.email,
+      avatar: user.avatar,
       token: generateToken(user.id),
     });
   } catch (error) {
@@ -55,6 +56,7 @@ const getProfile = async (req, res) => {
       name: user.name,
       username: user.username,
       email: user.email,
+      avatar: user.avatar,
       bio: user.bio,
     });
   } catch (error) {
