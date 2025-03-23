@@ -8,11 +8,16 @@ const Register = () => {
     username: "",
     email: "",
     password: "",
+    avatar: "",
   });
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // fake avatar assigned
+    formData.avatar = `https://i.pravatar.cc/150?u=${formData.email}`;
+
     try {
       await axiosInstance.post("/api/auth/register", formData);
       alert("Registration successful. Please log in.");

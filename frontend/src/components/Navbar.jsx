@@ -11,7 +11,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="sticky top-0 bg-whit border-b-[1px] border-gray-300 p-4 flex justify-between items-center">
+    <nav className="sticky top-0 bg-white border-b-[1px] border-gray-300 p-4 flex justify-between items-center">
       <Link to="/" className="text-2xl font-bold">
         Social Media App
       </Link>
