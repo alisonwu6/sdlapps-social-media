@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "../context/AuthContext";
 import axiosInstance from "../axiosConfig";
 import LikeButton from "./LikeButton";
 import { ChatBubbleLeftIcon } from "@heroicons/react/24/outline";
+import { PencilSquareIcon } from "@heroicons/react/24/outline";
+import { TrashIcon } from "@heroicons/react/24/outline";
 
 const PostList = ({
   _id: pid,
@@ -10,7 +13,9 @@ const PostList = ({
   createdAt,
   userId: { username, avatar, _id: uid },
   hasLiked,
+  parentDeletePost,
 }) => {
+  const { user } = useAuth();
   const [likeCount, setLikeCount] = useState(0);
 
   useEffect(() => {
@@ -24,6 +29,17 @@ const PostList = ({
     };
     getLikeCount();
   }, [pid]);
+
+  const deletePost = async () => {
+    try {
+      await axiosInstance.delete(`/api/posts/${pid}`, {
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      parentDeletePost(pid); // delete this post on the list page.
+    } catch (error) {
+      console.error("Failed to delete post:", error);
+    }
+  };
 
   return (
     <div className="border-2 rounded mb-4">
@@ -40,17 +56,29 @@ const PostList = ({
       </div>
       <div className="pb-4">
         <div className="px-4">
-          <div className="inline-flex">
-            <LikeButton
-              postId={pid}
-              userId={uid}
-              hasLiked={hasLiked}
-            />
-            <span className="text-sm font-bold">{likeCount}</span>
-          </div>
-          <div className="inline-flex ml-2">
-            <ChatBubbleLeftIcon className="h-6 w-6 text-gray-600" />
-            <span className="text-sm font-bold">2</span>
+          <div className="flex justify-between items-center mb-1">
+            <div className="flex space-x-4">
+              <div className="flex items-center space-x-1">
+                <LikeButton
+                  postId={pid}
+                  userId={uid}
+                  hasLiked={hasLiked}
+                />
+                <span className="text-sm font-bold">{likeCount}</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <ChatBubbleLeftIcon className="h-6 w-6 text-gray-600 cursor-pointer" />
+                <span className="text-sm font-bold">2</span>
+              </div>
+            </div>
+
+            <div className="flex space-x-4">
+              <PencilSquareIcon className="h-6 w-6 text-gray-600 cursor-pointer" />
+              <TrashIcon
+                className="h-6 w-6 text-gray-600 cursor-pointer"
+                onClick={deletePost}
+              />
+            </div>
           </div>
           <p className="text-sm">
             <span className="text-sm font-bold inline-block mr-1">

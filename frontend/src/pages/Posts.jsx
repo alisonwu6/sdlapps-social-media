@@ -36,6 +36,10 @@ const Posts = () => {
     fetchUserLikes();
   }, [user]);
 
+  const handleDeletePost = (deletedPostId) => {
+    setPosts((prev => prev.filter(post => post._id !== deletedPostId)));
+  }
+
   return (
     <div className="container mx-auto p-6">
       {posts.map((post) => (
@@ -43,6 +47,7 @@ const Posts = () => {
           {...post}
           key={post._id}
           hasLiked={userLikes.includes(post._id)}
+          parentDeletePost={handleDeletePost}
         />
       ))}
     </div>
