@@ -1,50 +1,47 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import axiosInstance from "../axiosConfig";
+import { useParams } from "react-router-dom";
 
-const PostForm = ({ posts, setPosts, editingPost, setEditingPost }) => {
+const PostForm = () => {
   const { user } = useAuth();
+  const { postId } = useParams();
+  const editingPost = Boolean(postId);
+
   const [formData, setFormData] = useState({
     location: "",
     caption: "",
-    createdAt: "",
   });
 
   useEffect(() => {
-    if (editingPost) {
-      setFormData({
-        location: editingPost.location,
-        caption: editingPost.caption,
-      });
-    } else {
-      setFormData({ location: "", caption: ""});
-    }
-  }, [editingPost]);
+    if (!postId) return;
+    const getPostById = async () => {
+      try {
+        const response = await axiosInstance.get(`/api/posts/${postId}`);
+        setFormData(response.data);
+      } catch (error) {
+        console.log("getPostById", error.message);
+      }
+    };
+
+    getPostById();
+  }, [postId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       if (editingPost) {
-        const response = await axiosInstance.put(
-          `/api/posts/${editingPost._id}`,
-          formData,
-          {
-            headers: { Authorization: `Bearer ${user.token}` },
-          },
-        );
-        setPosts(
-          posts.map((post) =>
-            post._id === response.data._id ? response.data : post,
-          ),
-        );
-      } else {
-        const response = await axiosInstance.post("/api/posts", formData, {
+        await axiosInstance.put(`/api/posts/${postId}`, formData, {
           headers: { Authorization: `Bearer ${user.token}` },
         });
-        setPosts([...posts, response.data]);
+        alert("Post updated");
+      } else {
+        await axiosInstance.post("/api/posts", formData, {
+          headers: { Authorization: `Bearer ${user.token}` },
+        });
+        alert("Post created");
+        setFormData({ location: "", caption: "" });
       }
-      setEditingPost(null);
-      setFormData({ location: "", caption: "", img: "" });
     } catch (error) {
       alert("Failed to save post.");
     }

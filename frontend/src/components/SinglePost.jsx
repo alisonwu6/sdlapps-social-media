@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import axiosInstance from "../axiosConfig";
 import LikeButton from "./LikeButton";
@@ -6,15 +7,18 @@ import { ChatBubbleLeftIcon } from "@heroicons/react/24/outline";
 import { PencilSquareIcon } from "@heroicons/react/24/outline";
 import { TrashIcon } from "@heroicons/react/24/outline";
 
-const PostList = ({
-  _id: pid,
-  location,
-  caption,
-  createdAt,
-  userId: { username, avatar, _id: uid },
+const SinglePost = ({
+  post: {
+    _id: pid,
+    location,
+    caption,
+    createdAt,
+    userId: { username, avatar, _id: uid },
+  },
   hasLiked,
   parentDeletePost,
 }) => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [likeCount, setLikeCount] = useState(0);
 
@@ -39,6 +43,10 @@ const PostList = ({
     } catch (error) {
       console.error("Failed to delete post:", error);
     }
+  };
+
+  const goEditPage = () => {
+    navigate(`/edit-post/${pid}`);
   };
 
   return (
@@ -73,7 +81,10 @@ const PostList = ({
             </div>
 
             <div className="flex space-x-4">
-              <PencilSquareIcon className="h-6 w-6 text-gray-600 cursor-pointer" />
+              <PencilSquareIcon
+                className="h-6 w-6 text-gray-600 cursor-pointer"
+                onClick={goEditPage}
+              />
               <TrashIcon
                 className="h-6 w-6 text-gray-600 cursor-pointer"
                 onClick={deletePost}
@@ -96,4 +107,4 @@ const PostList = ({
   );
 };
 
-export default PostList;
+export default SinglePost;

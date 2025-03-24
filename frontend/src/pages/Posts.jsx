@@ -44,7 +44,7 @@ const Posts = () => {
     <div className="container mx-auto p-6">
       {posts.map((post) => (
         <SinglePost
-          {...post}
+          post={post}
           key={post._id}
           hasLiked={userLikes.includes(post._id)}
           parentDeletePost={handleDeletePost}

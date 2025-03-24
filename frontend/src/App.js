@@ -5,6 +5,7 @@ import Register from "./pages/Register";
 import Profile from "./pages/Profile";
 import Posts from "./pages/Posts";
 import AddPost from "./pages/AddPost";
+import EditPost from "./pages/EditPost";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/add-post" element={<AddPost />} />
+          <Route path="/edit-post/:postId" element={<EditPost />} />
         </Routes>
       </Router>
     </div>

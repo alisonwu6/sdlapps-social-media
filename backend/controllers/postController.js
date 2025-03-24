@@ -3,12 +3,25 @@ const Post = require("../models/Post");
 const getPosts = async (req, res) => {
   try {
     const posts = await Post.find().populate({
-      path: "userId", 
-      select: "username avatar"
+      path: "userId",
+      select: "username avatar",
     });
     res.json(posts);
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+const getPostById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const post = await Post.findById(id);
+    if (!post) {
+      return res.status(404).json({ message: "post not found" });
+    }
+    res.status(200).json(post);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -51,4 +64,4 @@ const deletePost = async (req, res) => {
   }
 };
 
-module.exports = { getPosts, addPost, updatePost, deletePost };
+module.exports = { getPosts, getPostById, addPost, updatePost, deletePost };
