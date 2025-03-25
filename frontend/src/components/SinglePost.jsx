@@ -1,15 +1,115 @@
-const PostList = ({ location, caption, createdAt, userId: { username } }) => {
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import axiosInstance from "../axiosConfig";
+import LikeButton from "./LikeButton";
+import { ChatBubbleLeftIcon } from "@heroicons/react/24/outline";
+import { PencilSquareIcon } from "@heroicons/react/24/outline";
+import { TrashIcon } from "@heroicons/react/24/outline";
+
+const SinglePost = ({
+  post: {
+    _id: pid,
+    location,
+    caption,
+    createdAt,
+    userId: { username, avatar, _id: uid },
+  },
+  hasLiked,
+  parentDeletePost,
+}) => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [likeCount, setLikeCount] = useState(0);
+  const [comment, setComment] = useState([]);
+  const [comments, setComments] = useState([]);
+
+  useEffect(() => {
+    const getLikeCount = async () => {
+      try {
+        const response = await axiosInstance.get(`/api/likes/${pid}/count`);
+        setLikeCount(response.data.count);
+      } catch (error) {
+        console.error("getLikeCount error", error);
+      }
+    };
+
+    const getCommentsByPostId = async () => {
+      try {
+        const response = await axiosInstance.get(`/api/comments/${pid}`);
+        setComments(response.data);
+        console.log("getCommentsByPostId response", response);
+      } catch (error) {
+        console.log("postComment failed", error);
+      }
+    };
+
+    getLikeCount();
+    getCommentsByPostId();
+  }, [pid]);
+
+  const deletePost = async () => {
+    if (!user) {
+      alert("Still not a member? Join us right now!");
+      return;
+    }
+    try {
+      await axiosInstance.delete(`/api/posts/${pid}`, {
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      parentDeletePost(pid); // delete this post on the list page.
+    } catch (error) {
+      console.error("Failed to delete post:", error);
+    }
+  };
+
+  const goEditPage = () => {
+    if (!user) {
+      alert("Still not a member? Join us right now!");
+      return;
+    }
+    navigate(`/edit-post/${pid}`);
+  };
+
+  const handlePostComment = async () => {
+    console.log("handlePostComment");
+    if (!user) {
+      alert("Still not a member? Join us right now!");
+      return;
+    }
+    try {
+      await axiosInstance.post(
+        `/api/comments/${pid}`,
+        { comment, userId: uid, postId: pid },
+        {
+          headers: { Authorization: `Bearer ${user.token}` },
+        }
+      );
+      setComment("");
+      // getCommentsByPostId();
+    } catch (error) {
+      console.log("postComment failed", error);
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    try {
+      await axiosInstance.delete(`/api/comments/${commentId}`, {
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+    } catch (error) {
+      console.log("postComment failed", error);
+    }
+  };
+
   return (
     <div className="border-2 rounded mb-4">
       <div className="flex h-[70px] items-center box-border px-4">
-        <div
-          className="w-[50px] h-[50px] overflow-hidden border rounded-full"
-          style={{
-            backgroundImage: "https://i.pravatar.cc/300",
-            backgroundPosition: "center",
-            backgroundSize: "cover",
-          }}
-        ></div>
+        <img
+          src={avatar}
+          alt={`${username}'s avatar`}
+          className="w-12 h-12 rounded-full"
+        />
         <div className="ml-4">
           <p className="font-bold text-sm">{username}</p>
           <p className="text-gray-400 text-xs">{location}</p>
@@ -17,41 +117,31 @@ const PostList = ({ location, caption, createdAt, userId: { username } }) => {
       </div>
       <div className="pb-4">
         <div className="px-4">
-          <div className="flex justify-between box-border mb-4">
-            <div className="flex">
-              <div className="flex mr-2">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-[30px] w-[30px]"
-                  fill="none"
-                  viewBox="0 0 30 30"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                  />
-                </svg>
-                <div className="text-sm font-bold">100</div>
+          <div className="flex justify-between items-center mb-1">
+            <div className="flex space-x-4">
+              <div className="flex items-center space-x-1">
+                <LikeButton
+                  postId={pid}
+                  userId={uid}
+                  hasLiked={hasLiked}
+                />
+                <span className="text-sm font-bold">{likeCount}</span>
               </div>
-              <div>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-[30px] w-[30px]"
-                  fill="none"
-                  viewBox="0 0 30 30"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                  />
-                </svg>
+              <div className="flex items-center space-x-1">
+                <ChatBubbleLeftIcon className="h-6 w-6 text-gray-600 cursor-pointer" />
+                <span className="text-sm font-bold">2</span>
               </div>
+            </div>
+
+            <div className="flex space-x-4">
+              <PencilSquareIcon
+                className="h-6 w-6 text-gray-600 cursor-pointer"
+                onClick={goEditPage}
+              />
+              <TrashIcon
+                className="h-6 w-6 text-gray-600 cursor-pointer"
+                onClick={deletePost}
+              />
             </div>
           </div>
           <p className="text-sm">
@@ -60,9 +150,53 @@ const PostList = ({ location, caption, createdAt, userId: { username } }) => {
             </span>
             {caption}
           </p>
-          <p className="text-gray-400 text-xs font-[500] mt-2">
-            View all 999 comments
-          </p>
+          <p className="text-gray-400 text-xs font-[500] mt-2"></p>
+          <div>
+            {comments.length > 0 ? (
+              comments.map((comment) => (
+                <div
+                  className="flex justify-between"
+                  key={comment._id}
+                >
+                  <div className="text-sm">
+                    <span>{comment.userId.username}:</span>{" "}
+                    <span>{comment.comment}</span>
+                  </div>
+
+                  {comment.userId._id === user.id && (
+                    <div className="text-sm text-gray-400">
+                      <span className="cursor-pointer">Edit</span>
+                      <span> | </span>
+                      <span
+                        className="cursor-pointer"
+                        onClick={() => handleDeleteComment(comment._id)}
+                      >
+                        Delete
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ))
+            ) : (
+              <span className="text-sm text-gray-300 underline">No comment yet, leave a comment below.</span>
+            )}
+          </div>
+          <div className="flex mt-3">
+            <input
+              type="text"
+              placeholder="Leave a comment here..."
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              className="w-full text-sm border rounded-l"
+            />
+            <button
+              type="submit"
+              className="text-sm rounded-r bg-blue-500 text-white px-2"
+              onClick={handlePostComment}
+            >
+              Reply
+            </button>
+          </div>
           <p className="text-gray-400 text-[10px] mt-1">{createdAt}</p>
         </div>
       </div>
@@ -70,4 +204,4 @@ const PostList = ({ location, caption, createdAt, userId: { username } }) => {
   );
 };
 
-export default PostList;
+export default SinglePost;
