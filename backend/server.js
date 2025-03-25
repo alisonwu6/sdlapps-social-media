@@ -12,6 +12,7 @@ app.use(express.json());
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/posts", require("./routes/postRoutes"));
 app.use("/api/likes", require("./routes/postLikeRoutes"))
+app.use("/api/comments", require("./routes/postCommentRoutes"))
 
 // Export the app object for testing
 if (require.main === module) {

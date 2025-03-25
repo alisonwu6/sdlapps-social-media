@@ -21,6 +21,8 @@ const SinglePost = ({
   const navigate = useNavigate();
   const { user } = useAuth();
   const [likeCount, setLikeCount] = useState(0);
+  const [comment, setComment] = useState([]);
+  const [comments, setComments] = useState([]);
 
   useEffect(() => {
     const getLikeCount = async () => {
@@ -31,10 +33,26 @@ const SinglePost = ({
         console.error("getLikeCount error", error);
       }
     };
+
+    const getCommentsByPostId = async () => {
+      try {
+        const response = await axiosInstance.get(`/api/comments/${pid}`);
+        setComments(response.data);
+        console.log("getCommentsByPostId response", response);
+      } catch (error) {
+        console.log("postComment failed", error);
+      }
+    };
+
     getLikeCount();
+    getCommentsByPostId();
   }, [pid]);
 
   const deletePost = async () => {
+    if (!user) {
+      alert("Still not a member? Join us right now!");
+      return;
+    }
     try {
       await axiosInstance.delete(`/api/posts/${pid}`, {
         headers: { Authorization: `Bearer ${user.token}` },
@@ -46,7 +64,42 @@ const SinglePost = ({
   };
 
   const goEditPage = () => {
+    if (!user) {
+      alert("Still not a member? Join us right now!");
+      return;
+    }
     navigate(`/edit-post/${pid}`);
+  };
+
+  const handlePostComment = async () => {
+    console.log("handlePostComment");
+    if (!user) {
+      alert("Still not a member? Join us right now!");
+      return;
+    }
+    try {
+      await axiosInstance.post(
+        `/api/comments/${pid}`,
+        { comment, userId: uid, postId: pid },
+        {
+          headers: { Authorization: `Bearer ${user.token}` },
+        }
+      );
+      setComment("");
+      // getCommentsByPostId();
+    } catch (error) {
+      console.log("postComment failed", error);
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    try {
+      await axiosInstance.delete(`/api/comments/${commentId}`, {
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+    } catch (error) {
+      console.log("postComment failed", error);
+    }
   };
 
   return (
@@ -97,9 +150,53 @@ const SinglePost = ({
             </span>
             {caption}
           </p>
-          <p className="text-gray-400 text-xs font-[500] mt-2">
-            View all 999 comments
-          </p>
+          <p className="text-gray-400 text-xs font-[500] mt-2"></p>
+          <div>
+            {comments.length > 0 ? (
+              comments.map((comment) => (
+                <div
+                  className="flex justify-between"
+                  key={comment._id}
+                >
+                  <div className="text-sm">
+                    <span>{comment.userId.username}:</span>{" "}
+                    <span>{comment.comment}</span>
+                  </div>
+
+                  {comment.userId._id === user.id && (
+                    <div className="text-sm text-gray-400">
+                      <span className="cursor-pointer">Edit</span>
+                      <span> | </span>
+                      <span
+                        className="cursor-pointer"
+                        onClick={() => handleDeleteComment(comment._id)}
+                      >
+                        Delete
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ))
+            ) : (
+              <span className="text-sm text-gray-300 underline">No comment yet, leave a comment below.</span>
+            )}
+          </div>
+          <div className="flex mt-3">
+            <input
+              type="text"
+              placeholder="Leave a comment here..."
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              className="w-full text-sm border rounded-l"
+            />
+            <button
+              type="submit"
+              className="text-sm rounded-r bg-blue-500 text-white px-2"
+              onClick={handlePostComment}
+            >
+              Reply
+            </button>
+          </div>
           <p className="text-gray-400 text-[10px] mt-1">{createdAt}</p>
         </div>
       </div>

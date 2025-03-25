@@ -38,7 +38,6 @@ const getPostLikeCount = async (req, res) => {
 
   try {
     const count = await PostLike.countDocuments({ post: postId });
-    console.log("count", count);
     res.status(200).json({ count });
   } catch (err) {
     res.status(500).json({ error: err.message });
