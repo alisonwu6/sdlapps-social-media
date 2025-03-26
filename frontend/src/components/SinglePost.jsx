@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import axiosInstance from "../axiosConfig";
@@ -20,33 +20,38 @@ const SinglePost = ({
 }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [likeCount, setLikeCount] = useState(0);
+  const [likeCount, setLikeCount] = useState(null);
+  const [commentCount, setCommentCount] = useState(null);
   const [comment, setComment] = useState([]);
   const [comments, setComments] = useState([]);
+  const [editingComment, setEditingComment] = useState(false);
+  const [editedText, setEditedText] = useState("");
+
+  const getCommentsByPostId = useCallback(async () => {
+    try {
+      const response = await axiosInstance.get(`/api/comments/${pid}`);
+
+      const comments = response.data;
+      setComments(comments);
+      setCommentCount(comments.length);
+    } catch (error) {
+      console.log("postComment failed", error);
+    }
+  }, [pid]);
+
+  const getLikeCount = useCallback(async () => {
+    try {
+      const response = await axiosInstance.get(`/api/likes/${pid}/count`);
+      setLikeCount(response.data.count);
+    } catch (error) {
+      console.error("getLikeCount error", error);
+    }
+  }, [pid]);
 
   useEffect(() => {
-    const getLikeCount = async () => {
-      try {
-        const response = await axiosInstance.get(`/api/likes/${pid}/count`);
-        setLikeCount(response.data.count);
-      } catch (error) {
-        console.error("getLikeCount error", error);
-      }
-    };
-
-    const getCommentsByPostId = async () => {
-      try {
-        const response = await axiosInstance.get(`/api/comments/${pid}`);
-        setComments(response.data);
-        console.log("getCommentsByPostId response", response);
-      } catch (error) {
-        console.log("postComment failed", error);
-      }
-    };
-
     getLikeCount();
     getCommentsByPostId();
-  }, [pid]);
+  }, [getCommentsByPostId, getLikeCount]);
 
   const deletePost = async () => {
     if (!user) {
@@ -58,6 +63,7 @@ const SinglePost = ({
         headers: { Authorization: `Bearer ${user.token}` },
       });
       parentDeletePost(pid); // delete this post on the list page.
+      getCommentsByPostId();
     } catch (error) {
       console.error("Failed to delete post:", error);
     }
@@ -86,9 +92,46 @@ const SinglePost = ({
         }
       );
       setComment("");
-      // getCommentsByPostId();
+      getCommentsByPostId();
     } catch (error) {
       console.log("postComment failed", error);
+    }
+  };
+
+  function handleEditing(commentObj) {
+    const { comment, _id: commentId } = commentObj;
+    if (editingComment) {
+      setEditingComment(false);
+    } else {
+      setEditingComment(true);
+      setEditedText(comment);
+    }
+  }
+
+  const handleUpdateComment = async (commentId) => {
+    try {
+      await axiosInstance.put(
+        `/api/comments/${commentId}`,
+        {
+          comment: editedText,
+        },
+        {
+          headers: { Authorization: `Bearer ${user.token}` },
+        }
+      );
+
+      setComments((prev) =>
+        prev.map((comment) =>
+          comment._id === commentId
+            ? { ...comment, comment: editedText }
+            : comment
+        )
+      );
+      setEditingComment(false);
+      setEditedText("");
+      alert("Comment updated");
+    } catch (error) {
+      console.error("Failed to update comment", error);
     }
   };
 
@@ -97,6 +140,8 @@ const SinglePost = ({
       await axiosInstance.delete(`/api/comments/${commentId}`, {
         headers: { Authorization: `Bearer ${user.token}` },
       });
+      getCommentsByPostId();
+      alert("comment deleted");
     } catch (error) {
       console.log("postComment failed", error);
     }
@@ -128,18 +173,18 @@ const SinglePost = ({
                 <span className="text-sm font-bold">{likeCount}</span>
               </div>
               <div className="flex items-center space-x-1">
-                <ChatBubbleLeftIcon className="h-6 w-6 text-gray-600 cursor-pointer" />
-                <span className="text-sm font-bold">2</span>
+                <ChatBubbleLeftIcon className="h-6 w-6 text-gray-600" />
+                <span className="text-sm font-bold">{commentCount}</span>
               </div>
             </div>
 
-            <div className="flex space-x-4">
+            <div className="flex space-x-4 text-sm">
               <PencilSquareIcon
-                className="h-6 w-6 text-gray-600 cursor-pointer"
+                className="h-5 w-5 text-gray-400 cursor-pointer"
                 onClick={goEditPage}
               />
               <TrashIcon
-                className="h-6 w-6 text-gray-600 cursor-pointer"
+                className="h-5 w-5 text-gray-400 cursor-pointer"
                 onClick={deletePost}
               />
             </div>
@@ -158,14 +203,39 @@ const SinglePost = ({
                   className="flex justify-between"
                   key={comment._id}
                 >
-                  <div className="text-sm">
-                    <span>{comment.userId.username}:</span>{" "}
-                    <span>{comment.comment}</span>
+                  <div className="text-sm flex">
+                    <span>{comment.userId.username}:</span>
+
+                    {editingComment ? (
+                      <div className="flex">
+                        <input
+                          type="text"
+                          placeholder="Edit your comment here..."
+                          value={editedText}
+                          onChange={(e) => setEditedText(e.target.value)}
+                          className="w-full text-sm border rounded-l"
+                        />
+                        <button
+                          type="submit"
+                          className="text-sm rounded-r bg-blue-500 text-white px-2"
+                          onClick={() => handleUpdateComment(comment._id)}
+                        >
+                          Update
+                        </button>
+                      </div>
+                    ) : (
+                      <span>{comment.comment}</span>
+                    )}
                   </div>
 
-                  {comment.userId._id === user.id && (
+                  {user?.id && comment.userId._id === user.id && (
                     <div className="text-sm text-gray-400">
-                      <span className="cursor-pointer">Edit</span>
+                      <span
+                        className="cursor-pointer"
+                        onClick={() => handleEditing(comment)}
+                      >
+                        {editingComment ? "Cancel" : "Edit"}
+                      </span>
                       <span> | </span>
                       <span
                         className="cursor-pointer"
@@ -178,7 +248,9 @@ const SinglePost = ({
                 </div>
               ))
             ) : (
-              <span className="text-sm text-gray-300 underline">No comment yet, leave a comment below.</span>
+              <span className="text-sm text-gray-300 underline">
+                No comment yet, leave a comment below.
+              </span>
             )}
           </div>
           <div className="flex mt-3">

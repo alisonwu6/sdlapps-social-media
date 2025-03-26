@@ -19,12 +19,10 @@ const addComment = async (req, res) => {
 const getCommentsById = async (req, res) => {
   const { postId } = req.params;
   try {
-    const comments = await PostComment.find({ postId: postId })
-      .populate({
-        path: "userId",
-        select: "username",
-      })
-      .sort({ createdAt: -1 });
+    const comments = await PostComment.find({ postId: postId }).populate({
+      path: "userId",
+      select: "username",
+    });
 
     res.status(200).json(comments);
   } catch (error) {
@@ -32,9 +30,24 @@ const getCommentsById = async (req, res) => {
   }
 };
 
+const updateComment = async (req, res) => {
+  const { commentId } = req.params;
+  const { comment } = req.body;
+
+  try {
+    const updatedComment = await PostComment.findByIdAndUpdate(
+      commentId,
+      { comment },
+    );
+
+    res.status(200).json(updatedComment);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 const deleteComment = async (req, res) => {
   const { commentId } = req.params;
-  // console.log('commentId', commentId)
 
   try {
     const comment = await PostComment.findById(commentId);
@@ -46,4 +59,4 @@ const deleteComment = async (req, res) => {
   }
 };
 
-module.exports = { addComment, getCommentsById, deleteComment };
+module.exports = { addComment, getCommentsById, updateComment, deleteComment };

@@ -2,6 +2,7 @@ const express = require("express");
 const {
   getCommentsById,
   addComment,
+  updateComment,
   deleteComment,
 } = require("../controllers/postComment");
 const { protect } = require("../middleware/authMiddleware");
@@ -14,6 +15,7 @@ router
 
 router
   .route("/:commentId")
+  .put(protect, updateComment)
   .delete(protect, deleteComment);
 
 module.exports = router;
