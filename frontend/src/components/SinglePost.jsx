@@ -99,7 +99,7 @@ const SinglePost = ({
   };
 
   function handleEditing(commentObj) {
-    const { comment, _id: commentId } = commentObj;
+    const { comment } = commentObj;
     if (editingComment) {
       setEditingComment(false);
     } else {
