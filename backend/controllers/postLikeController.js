@@ -6,7 +6,6 @@ const toggleLike = async (req, res) => {
 
   try {
     const hasLiked = await PostLike.findOne({ userId, postId });
-    // TODO to avoid duplicate
     if (hasLiked) {
       await PostLike.deleteOne({ _id: hasLiked._id });
       return res.status(200).json({ liked: false });
@@ -37,11 +36,11 @@ const getPostLikeCount = async (req, res) => {
   const { postId } = req.params;
 
   try {
-    const count = await PostLike.countDocuments({ post: postId });
+    const count = await PostLike.countDocuments({ postId: postId });
     res.status(200).json({ count });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-}
+};
 
 module.exports = { toggleLike, getUserLikedPostId, getPostLikeCount };

@@ -157,6 +157,7 @@ const SinglePost = ({
                   postId={pid}
                   userId={uid}
                   hasLiked={hasLiked}
+                  getLikeCount={getLikeCount}
                 />
                 <span className="text-sm font-bold">{likeCount}</span>
               </div>
