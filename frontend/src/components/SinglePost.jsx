@@ -24,8 +24,8 @@ const SinglePost = ({
   const [commentCount, setCommentCount] = useState(null);
   const [comment, setComment] = useState([]);
   const [comments, setComments] = useState([]);
-  const [editingComment, setEditingComment] = useState(false);
-  const [editedText, setEditedText] = useState("");
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editedTexts, setEditedTexts] = useState({});
 
   const getCommentsByPostId = useCallback(async () => {
     try {
@@ -87,12 +87,12 @@ const SinglePost = ({
   };
 
   function handleEditing(commentObj) {
-    const { comment } = commentObj;
-    if (editingComment) {
-      setEditingComment(false);
+    const { _id, comment } = commentObj;
+    if (editingCommentId === _id) {
+      setEditingCommentId(null);
     } else {
-      setEditingComment(true);
-      setEditedText(comment);
+      setEditingCommentId(_id);
+      setEditedTexts((prev) => ({ ...prev, [_id]: comment }));
     }
   }
 
@@ -100,23 +100,23 @@ const SinglePost = ({
     try {
       await axiosInstance.put(
         `/api/comments/${commentId}`,
-        {
-          comment: editedText,
-        },
-        {
-          headers: { Authorization: `Bearer ${user.token}` },
-        }
+        { comment: editedTexts[commentId] },
+        { headers: { Authorization: `Bearer ${user.token}` } }
       );
 
       setComments((prev) =>
         prev.map((comment) =>
           comment._id === commentId
-            ? { ...comment, comment: editedText }
+            ? { ...comment, comment: editedTexts[commentId] }
             : comment
         )
       );
-      setEditingComment(false);
-      setEditedText("");
+      setEditingCommentId(null);
+      setEditedTexts((prev) => {
+        const updated = { ...prev };
+        delete updated[commentId];
+        return updated;
+      });
       alert("Comment updated");
     } catch (error) {
       console.error("Failed to update comment", error);
@@ -196,13 +196,18 @@ const SinglePost = ({
                   <div className="text-sm flex">
                     <span>{comment.userId.username}:</span>
 
-                    {editingComment ? (
+                    {editingCommentId === comment._id ? (
                       <div className="flex">
                         <input
                           type="text"
                           placeholder="Edit your comment here..."
-                          value={editedText}
-                          onChange={(e) => setEditedText(e.target.value)}
+                          value={editedTexts[comment._id] || ""}
+                          onChange={(e) =>
+                            setEditedTexts((prev) => ({
+                              ...prev,
+                              [comment._id]: e.target.value,
+                            }))
+                          }
                           className="w-full text-sm border rounded-l"
                         />
                         <button
@@ -214,7 +219,7 @@ const SinglePost = ({
                         </button>
                       </div>
                     ) : (
-                      <span>{comment.comment}</span>
+                      <span className="ml-1">{comment.comment}</span>
                     )}
                   </div>
 
@@ -224,7 +229,7 @@ const SinglePost = ({
                         className="cursor-pointer"
                         onClick={() => handleEditing(comment)}
                       >
-                        {editingComment ? "Cancel" : "Edit"}
+                        {editingCommentId === comment._id ? "Cancel" : "Edit"}
                       </span>
                       <span> | </span>
                       <span
