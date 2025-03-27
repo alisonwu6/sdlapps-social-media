@@ -54,35 +54,23 @@ const SinglePost = ({
   }, [getCommentsByPostId, getLikeCount]);
 
   const deletePost = async () => {
-    if (!user) {
-      alert("Still not a member? Join us right now!");
-      return;
-    }
     try {
       await axiosInstance.delete(`/api/posts/${pid}`, {
         headers: { Authorization: `Bearer ${user.token}` },
       });
-      parentDeletePost(pid); // delete this post on the list page.
+      parentDeletePost(pid);
       getCommentsByPostId();
+      alert("post deleted");
     } catch (error) {
       console.error("Failed to delete post:", error);
     }
   };
 
   const goEditPage = () => {
-    if (!user) {
-      alert("Still not a member? Join us right now!");
-      return;
-    }
     navigate(`/edit-post/${pid}`);
   };
 
   const handlePostComment = async () => {
-    console.log("handlePostComment");
-    if (!user) {
-      alert("Still not a member? Join us right now!");
-      return;
-    }
     try {
       await axiosInstance.post(
         `/api/comments/${pid}`,
@@ -141,7 +129,7 @@ const SinglePost = ({
         headers: { Authorization: `Bearer ${user.token}` },
       });
       getCommentsByPostId();
-      alert("comment deleted");
+      alert("Comment deleted");
     } catch (error) {
       console.log("postComment failed", error);
     }
@@ -177,17 +165,18 @@ const SinglePost = ({
                 <span className="text-sm font-bold">{commentCount}</span>
               </div>
             </div>
-
-            <div className="flex space-x-4 text-sm">
-              <PencilSquareIcon
-                className="h-5 w-5 text-gray-400 cursor-pointer"
-                onClick={goEditPage}
-              />
-              <TrashIcon
-                className="h-5 w-5 text-gray-400 cursor-pointer"
-                onClick={deletePost}
-              />
-            </div>
+            {user?.id === uid && (
+              <div className="flex space-x-4 text-sm">
+                <PencilSquareIcon
+                  className="h-5 w-5 text-gray-400 cursor-pointer"
+                  onClick={goEditPage}
+                />
+                <TrashIcon
+                  className="h-5 w-5 text-gray-400 cursor-pointer"
+                  onClick={deletePost}
+                />
+              </div>
+            )}
           </div>
           <p className="text-sm">
             <span className="text-sm font-bold inline-block mr-1">
@@ -253,22 +242,24 @@ const SinglePost = ({
               </span>
             )}
           </div>
-          <div className="flex mt-3">
-            <input
-              type="text"
-              placeholder="Leave a comment here..."
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              className="w-full text-sm border rounded-l"
-            />
-            <button
-              type="submit"
-              className="text-sm rounded-r bg-blue-500 text-white px-2"
-              onClick={handlePostComment}
-            >
-              Reply
-            </button>
-          </div>
+          {user && (
+            <div className="flex mt-3">
+              <input
+                type="text"
+                placeholder="Leave a comment here..."
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                className="w-full text-sm border rounded-l"
+              />
+              <button
+                type="submit"
+                className="text-sm rounded-r bg-blue-500 text-white px-2"
+                onClick={handlePostComment}
+              >
+                Reply
+              </button>
+            </div>
+          )}
           <p className="text-gray-400 text-[10px] mt-1">{createdAt}</p>
         </div>
       </div>
